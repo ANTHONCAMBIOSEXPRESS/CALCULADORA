@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora PEN a VES</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    label, select, input {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    .result {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 15px;
+      text-align: center;
+    }
+    .copy-button {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    .copy-button:hover {
+      background-color: #218838;
+    }
+    .history {
+      margin-top: 30px;
+    }
+    .history-entry {
+      background: #f9f9f9;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-left: 4px solid #007BFF;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .clear-history {
+      background-color: #dc3545;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Calculadora PEN a VES</h2>
+
+    <label>Monto en Soles (PEN):</label>
+    <input type="number" id="amount" placeholder="Ingresa el monto en PEN" />
+
+    <label>Tipo de servicio:</label>
+    <select id="rateType">
+      <option value="bank">Transferencia Bancaria</option>
+      <option value="mobile">Pago Móvil</option>
+    </select>
+
+    <label>Tasa para Transferencia Bancaria:</label>
+    <input type="number" step="0.0001" id="rateBank" placeholder="Tasa bancaria" />
+
+    <label>Tasa para Pago Móvil:</label>
+    <input type="number" step="0.0001" id="rateMobile" placeholder="Tasa pago móvil" />
+
+    <button onclick="convertCurrency()">Convertir</button>
+
+    <div class="result" id="result"></div>
+    <button class="copy-button" onclick="copyResult()">Copiar resultado</button>
+
+    <div class="history">
+      <h3>Historial</h3>
+      <div id="historyList"></div>
+      <button class="clear-history" onclick="clearHistory()">Borrar historial</button>
+    </div>
+  </div>
+
+  <script>
+    function convertCurrency() {
+      const amount = parseFloat(document.getElementById('amount').value);
+      const rateType = document.getElementById('rateType').value;
+      const rate = rateType === 'bank'
+        ? parseFloat(document.getElementById('rateBank').value)
+        : parseFloat(document.getElementById('rateMobile').value);
+
+      if (isNaN(amount) || isNaN(rate)) {
+        alert("Por favor ingresa un monto y una tasa válidos.");
+        return;
+      }
+
+      const result = amount * rate;
+      const resultText = `${amount} PEN = ${result.toFixed(2)} VES`;
+      document.getElementById('result').innerText = resultText;
+
+      const entry = {
+        amount,
+        rate,
+        result: result.toFixed(2),
+        tipo: rateType === 'bank' ? 'Transferencia Bancaria' : 'Pago Móvil',
+        date: new Date().toLocaleString()
+      };
+
+      let history = JSON.parse(localStorage.getItem("exchangeHistory") || "[]");
+      history.unshift(entry);
+      localStorage.setItem("exchangeHistory", JSON.stringify(history));
+      displayHistory();
+    }
+
+    function displayHistory() {
+      const historyList = document.getElementById("historyList");
+      const history = JSON.parse(localStorage.getItem("exchangeHistory") || "[]");
+      historyList.innerHTML = history.map(entry => `
+        <div class="history-entry">
+          ${entry.amount} PEN → ${entry.result} VES<br/>
+          ${entry.tipo} | Tasa: ${entry.rate} | Fecha: ${entry.date}
+        </div>`).join("");
+    }
+
+    function clearHistory() {
+      localStorage.removeItem("exchangeHistory");
+      displayHistory();
+    }
+
+    function copyResult() {
+      const resultText = document.getElementById("result").innerText;
+      if (!resultText) return;
+      navigator.clipboard.writeText(resultText).then(() => {
+        alert("Resultado copiado al portapapeles");
+      });
+    }
+
+    window.onload = displayHistory;
+  </script>
+</body>
+</html>
